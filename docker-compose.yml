@@ -1,0 +1,30 @@
+version: "3.7"
+
+services:
+  db:
+    environment:
+      PGDATA: /var/lib/postgresql/data/pgdata
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_HOST_AUTH_METHOD: trust
+    image: 'postgres:15.2-alpine3.17'
+    restart: always
+    volumes:
+      - ./database/:/var/lib/postgresql/data
+  backend:
+    build: 
+      context: .
+      dockerfile: Dockerfile
+    volumes:
+      - ./:/recurrences_client
+    ports:
+      - 4000:4000
+  server:
+    build: 
+      context: ../recurrences_grpc/
+      dockerfile: Dockerfile
+    volumes:
+      - ../recurrences_grpc:/recurrences_grpc
+    ports:
+      - 4400:4400
+    command: cargo run --bin recurrences-server
