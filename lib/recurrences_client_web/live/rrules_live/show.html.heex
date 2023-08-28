@@ -1,0 +1,41 @@
+<.header>
+  Rrules <%= @rrules.id %>
+  <:subtitle>This is a rrules record from your database.</:subtitle>
+  <:actions>
+    <.link patch={~p"/rrules/#{@rrules}/show/edit"} phx-click={JS.push_focus()}>
+      <.button>Edit rrules</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.list>
+  <:item title="Name"><%= @rrules.name %></:item>
+  <:item title="By hour"><%= @rrules.by_hour %></:item>
+  <:item title="By minute"><%= @rrules.by_minute %></:item>
+  <:item title="By month"><%= @rrules.by_month %></:item>
+  <:item title="By month day"><%= @rrules.by_month_day %></:item>
+  <:item title="By second"><%= @rrules.by_second %></:item>
+  <:item title="By set pos"><%= @rrules.by_set_pos %></:item>
+  <:item title="By week day"><%= @rrules.by_week_day %></:item>
+  <:item title="By week no"><%= @rrules.by_week_no %></:item>
+  <:item title="By year day"><%= @rrules.by_year_day %></:item>
+  <:item title="Count"><%= @rrules.count %></:item>
+  <:item title="Dt start"><%= @rrules.dt_start %></:item>
+  <:item title="Freq"><%= @rrules.freq %></:item>
+  <:item title="Interval"><%= @rrules.interval %></:item>
+  <:item title="Until"><%= @rrules.until %></:item>
+  <:item title="Week start"><%= @rrules.week_start %></:item>
+</.list>
+
+<.back navigate={~p"/rrules"}>Back to rrules</.back>
+
+<.modal :if={@live_action == :edit} id="rrules-modal" show on_cancel={JS.patch(~p"/rrules/#{@rrules}")}>
+  <.live_component
+    module={RecurrencesClientWeb.RrulesLive.FormComponent}
+    id={@rrules.id}
+    title={@page_title}
+    action={@live_action}
+    rrules={@rrules}
+    patch={~p"/rrules/#{@rrules}"}
+  />
+</.modal>
