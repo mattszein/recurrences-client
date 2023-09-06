@@ -324,7 +324,8 @@ defmodule RecurrencesClientWeb.CoreComponents do
 
   def input(%{type: "select"} = assigns) do
     ~H"""
-    <div id={@id} phx-feedback-for={@name} phx-update="ignore" class="sm:col-span-3">
+    <div class="sm:col-span-3">
+    <div id={@id} phx-feedback-for={@name} phx-update="ignore">
       <.label for={@id}><%= @label %></.label>
       <select
         name={@name}
@@ -336,6 +337,7 @@ defmodule RecurrencesClientWeb.CoreComponents do
         <option :if={@prompt} value=""><%= @prompt %></option>
         <%= Phoenix.HTML.Form.options_for_select(@options, @value) %>
       </select>
+    </div>
       <.error :for={msg <- @errors}><%= msg %></.error>
     </div>
     """

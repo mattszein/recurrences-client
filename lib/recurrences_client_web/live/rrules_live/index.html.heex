@@ -13,21 +13,7 @@
   row_click={fn {_id, rrules} -> JS.navigate(~p"/rrules/#{rrules}") end}
 >
   <:col :let={{_id, rrules}} label="Name"><%= rrules.name %></:col>
-  <:col :let={{_id, rrules}} label="By hour"><%= rrules.by_hour %></:col>
-  <:col :let={{_id, rrules}} label="By minute"><%= rrules.by_minute %></:col>
-  <:col :let={{_id, rrules}} label="By month"><%= rrules.by_month %></:col>
-  <:col :let={{_id, rrules}} label="By month day"><%= rrules.by_month_day %></:col>
-  <:col :let={{_id, rrules}} label="By second"><%= rrules.by_second %></:col>
-  <:col :let={{_id, rrules}} label="By set pos"><%= rrules.by_set_pos %></:col>
-  <:col :let={{_id, rrules}} label="By week day"><%= rrules.by_week_day %></:col>
-  <:col :let={{_id, rrules}} label="By week no"><%= rrules.by_week_no %></:col>
-  <:col :let={{_id, rrules}} label="By year day"><%= rrules.by_year_day %></:col>
-  <:col :let={{_id, rrules}} label="Count"><%= rrules.count %></:col>
-  <:col :let={{_id, rrules}} label="Dt start"><%= rrules.dt_start %></:col>
-  <:col :let={{_id, rrules}} label="Freq"><%= rrules.freq %></:col>
-  <:col :let={{_id, rrules}} label="Interval"><%= rrules.interval %></:col>
-  <:col :let={{_id, rrules}} label="Until"><%= rrules.until %></:col>
-  <:col :let={{_id, rrules}} label="Week start"><%= rrules.week_start %></:col>
+  <:col :let={{_id, rrules}} label="Rrule"><%= rrules.rrule %></:col>
   <:action :let={{_id, rrules}}>
     <div class="sr-only">
       <.link navigate={~p"/rrules/#{rrules}"}>Show</.link>

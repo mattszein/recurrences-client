@@ -1,7 +1,9 @@
 defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
   use RecurrencesClientWeb, :live_component
+  import Phoenix.HTML.Form
 
   alias RecurrencesClient.Recurreces
+  alias RecurrencesClient.Recurreces.Rrules
   alias Recurrencesclient.ProcessRrule
 
   @impl true
@@ -22,6 +24,7 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
           phx-change="validate"
           phx-submit="save"
         >
+          <.input field={@form[:rrule]} type="text" label="RRule" readonly />
           <.input field={@form[:name]} type="text" label="Name" />
           <.input
             field={@form[:freq]}
@@ -30,28 +33,27 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
             prompt="Choose a value"
             options={Ecto.Enum.values(RecurrencesClient.Recurreces.Rrules, :freq)}
           />
-          <.input field={@form[:by_hour]} type="text" label="By Hour" pattern="[0-9.]+" />
-          <.input field={@form[:by_minute]} type="text" label="By Minute" />
-          <.input field={@form[:by_month]} type="text" label="By Month" />
-          <.input field={@form[:by_month_day]} type="text" label="By Month Day" />
-          <.input field={@form[:by_second]} type="text" label="By Second" />
-          <.input field={@form[:by_set_pos]} type="text" label="By Set pos" />
+          <.input field={@form[:by_hour]} type="text" label="By Hour" value={input_value(@form, :by_hour) |> serialise_array} />
+          <.input field={@form[:by_minute]} type="text" label="By Minute"  value={input_value(@form, :by_minute) |> serialise_array}/> 
+          <.input field={@form[:by_month]} type="text" label="By Month" value={input_value(@form, :by_month) |> serialise_array}/>
+          <.input field={@form[:by_month_day]} type="text" label="By Month Day" value={input_value(@form, :by_month_day) |> serialise_array} />
+          <.input field={@form[:by_second]} type="text" label="By Second" value={input_value(@form, :by_second) |> serialise_array}/>
+          <.input field={@form[:by_set_pos]} type="text" label="By Set pos" value={input_value(@form, :by_set_pos) |> serialise_array} />
 
          <.input
             field={@form[:by_week_day]}
             type="select"
             multiple
             label="By week day"
-            options={Ecto.Enum.values(RecurrencesClient.Recurreces.Rrules, :by_week_day)}
+            options={[{"MO", "MO"}, {"TU","TU"}, {"WE","WE"}, {"TH","TH"}, {"FR", "FR"}, {"SA","SA"}, {"SU","SU"}]}
           />
-          <.input field={@form[:by_week_no]} type="text" label="By Week no" />
-          <.input field={@form[:by_year_day]} type="text" label="By Year Day" />
+          <.input field={@form[:by_week_no]} type="text" label="By Week no" value={input_value(@form, :by_week_no) |> serialise_array}/>
+          <.input field={@form[:by_year_day]} type="text" label="By Year Day" value={input_value(@form, :by_year_day) |> serialise_array} />
           <.input field={@form[:count]} type="number" label="Count" />
           <.input field={@form[:dt_start]} type="datetime-local" label="Dt start" />
           <.input field={@form[:interval]} type="number" label="Interval" />
           <.input field={@form[:until]} type="datetime-local" label="Until" />
           <.input field={@form[:week_start]} type="number" label="Week start" />
-
 
           <:actions>
             <.button phx-disable-with="Saving...">Save Rrules</.button>
@@ -61,6 +63,10 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
         <div class="basis-1/4">
           <.table id="dates" rows={@dates}>
             <:col :let={date} label="Dates"><%= date %></:col>
+            <:col :let={date} label="Date"> 
+              <%= string_to_date(date) %> 
+            </:col>
+           e
           </.table>
         </div>
       </div>
@@ -80,10 +86,6 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
 
   @impl true
   def handle_event("validate", %{"rrules" => rrules_params}, socket) do
-    # rrules_deserialise = %{
-    #  rrules_params
-    #  | "by_hour" => deserialise_text_array(Map.get(rrules_params, "by_hour"))
-    # }
     rrules_deserialise = text_inputs_to_arrays(rrules_params)
 
     changeset =
@@ -93,13 +95,22 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
 
     assigns =
       if Enum.empty?(Map.get(changeset, :errors)) do
-        data = ProcessRrule.process_data(parse_dates(Map.get(changeset, :changes)))
+        res =
+          Enum.reduce(Rrules.rrule_keys(), %{}, fn k, acc ->
+            Map.put(acc, k, Ecto.Changeset.get_field(changeset, k))
+          end)
+
+        data = ProcessRrule.process_data(res)
+
+        new_changeset =
+          changeset
+          |> add_rrule(Map.get(data, :rrule))
 
         socket
         |> assign(:dates, Map.get(data, :dates))
-        |> assign_form(replace_array_with_param_text(changeset, rrules_params))
+        |> assign_form(new_changeset)
       else
-        assign_form(socket, replace_array_with_param_text(changeset, rrules_params))
+        assign_form(socket, changeset)
       end
 
     {:noreply, assigns}
@@ -110,7 +121,9 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
   end
 
   defp save_rrules(socket, :edit, rrules_params) do
-    case Recurreces.update_rrules(socket.assigns.rrules, rrules_params) do
+    rrules_deserialise = text_inputs_to_arrays(rrules_params)
+
+    case Recurreces.update_rrules(socket.assigns.rrules, rrules_deserialise) do
       {:ok, rrules} ->
         notify_parent({:saved, rrules})
 
@@ -125,7 +138,9 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
   end
 
   defp save_rrules(socket, :new, rrules_params) do
-    case Recurreces.create_rrules(rrules_params) do
+    rrules_deserialise = text_inputs_to_arrays(rrules_params)
+
+    case Recurreces.create_rrules(rrules_deserialise) do
       {:ok, rrules} ->
         notify_parent({:saved, rrules})
 
@@ -145,34 +160,25 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  def parse_dates(change) do
-    change
-    |> Map.update!(:dt_start, &date_to_string/1)
-    |> Map.update!(:until, &date_to_string/1)
-    |> Map.update!(:freq, &Atom.to_string(&1))
-    |> Map.update(:by_week_day, "", &atom_to_string_list(&1))
-  end
-
   def text_inputs_to_arrays(params) do
-    params
-    |> Map.update!("by_hour", &deserialise_text_array/1)
-    |> Map.update!("by_minute", &deserialise_text_array/1)
-    |> Map.update!("by_second", &deserialise_text_array/1)
-    |> Map.update!("by_month", &deserialise_text_array/1)
-    |> Map.update!("by_month_day", &deserialise_text_array/1)
-    |> Map.update!("by_set_pos", &deserialise_text_array/1)
+    Enum.reduce(
+      [
+        "by_hour",
+        "by_minute",
+        "by_second",
+        "by_month",
+        "by_month_day",
+        "by_set_pos",
+        "by_year_day",
+        "by_week_no"
+      ],
+      params,
+      fn k, acc -> Map.update!(acc, k, &deserialise_text_array/1) end
+    )
   end
 
-  def string_to_atom_map(map) do
-    map |> Map.new(fn {k, v} -> {String.to_atom(k), v} end)
-  end
-
-  def atom_to_string_list(list) do
-    list |> Enum.map(fn k -> Atom.to_string(k) end)
-  end
-
-  def replace_array_with_param_text(%Ecto.Changeset{} = changeset, params) do
-    changeset |> Map.put(:changes, string_to_atom_map(params))
+  def add_rrule(%Ecto.Changeset{} = changeset, rrule) do
+    changeset |> Map.put(:changes, Map.put(Map.get(changeset, :changes), :rrule, rrule))
   end
 
   def deserialise_text_array(text) when is_nil(text), do: nil
@@ -183,7 +189,16 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
     |> String.split(",")
   end
 
-  def date_to_string(date) do
-    NaiveDateTime.to_iso8601(date)
+  def string_to_date(date) do
+    {:ok, dateParsed} = NaiveDateTime.from_iso8601(date)
+    Calendar.strftime(dateParsed, "%a, %B %d %Y")
+  end
+
+  def serialise_array(param) when param == nil do
+    param
+  end
+
+  def serialise_array(param) do
+    Enum.join(param, ", ")
   end
 end
