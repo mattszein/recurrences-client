@@ -1,0 +1,43 @@
+<.header>
+  Listing Rrules
+  <:actions>
+    <.link patch={~p"/rrules/new"}>
+      <.button>New Rrules</.button>
+    </.link>
+  </:actions>
+</.header>
+
+<.table
+  id="rrules"
+  rows={@streams.rrules_collection}
+  row_click={fn {_id, rrules} -> JS.navigate(~p"/rrules/#{rrules}") end}
+>
+  <:col :let={{_id, rrules}} label="Name"><%= rrules.name %></:col>
+  <:col :let={{_id, rrules}} label="Rrule"><%= rrules.rrule %></:col>
+  <:action :let={{_id, rrules}}>
+    <div class="sr-only">
+      <.link navigate={~p"/rrules/#{rrules}"}>Show</.link>
+    </div>
+    <.link patch={~p"/rrules/#{rrules}/edit"}>Edit</.link>
+  </:action>
+  <:action :let={{id, rrules}}>
+    <.link
+      phx-click={JS.push("delete", value: %{id: rrules.id}) |> hide("##{id}")}
+      data-confirm="Are you sure?"
+    >
+      Delete
+    </.link>
+  </:action>
+</.table>
+
+<.modal :if={@live_action in [:new, :edit]} id="rrules-modal" show on_cancel={JS.patch(~p"/rrules")}>
+  <.live_component
+    module={RecurrencesClientWeb.RrulesLive.FormComponent}
+    id={@rrules.id || :new}
+    title={@page_title}
+    dates={@dates}
+    action={@live_action}
+    rrules={@rrules}
+    patch={~p"/rrules"}
+  />
+</.modal>
