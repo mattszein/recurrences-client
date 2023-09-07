@@ -78,10 +78,13 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
   def update(%{rrules: rrules} = assigns, socket) do
     changeset = Recurreces.change_rrules(rrules)
 
-    {:ok,
-     socket
-     |> assign(assigns)
-     |> assign_form(changeset)}
+    socket_assign =
+      socket
+      |> assign(assigns)
+
+    new_socket = process_rrule(socket_assign, changeset)
+
+    {:ok, new_socket}
   end
 
   @impl true
@@ -93,26 +96,7 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
       |> Recurreces.change_rrules(rrules_deserialise)
       |> Map.put(:action, :validate)
 
-    assigns =
-      if Enum.empty?(Map.get(changeset, :errors)) do
-        res =
-          Enum.reduce(Rrules.rrule_keys(), %{}, fn k, acc ->
-            Map.put(acc, k, Ecto.Changeset.get_field(changeset, k))
-          end)
-
-        data = ProcessRrule.process_data(res)
-
-        new_changeset =
-          changeset
-          |> add_rrule(Map.get(data, :rrule))
-
-        socket
-        |> assign(:dates, Map.get(data, :dates))
-        |> assign_form(new_changeset)
-      else
-        assign_form(socket, changeset)
-      end
-
+    assigns = process_rrule(socket, changeset)
     {:noreply, assigns}
   end
 
@@ -160,7 +144,29 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
 
   defp notify_parent(msg), do: send(self(), {__MODULE__, msg})
 
-  def text_inputs_to_arrays(params) do
+  defp process_rrule(socket, changeset) do
+    if Enum.empty?(Map.get(changeset, :errors)) do
+      data = get_dates(changeset)
+
+      socket
+      |> assign(:dates, Map.get(data, :dates))
+      |> assign_form(add_rrule(changeset, Map.get(data, :rrule)))
+    else
+      socket
+      |> assign_form(changeset)
+    end
+  end
+
+  defp get_dates(changeset) do
+    model =
+      Enum.reduce(Rrules.rrule_keys(), %{}, fn k, acc ->
+        Map.put(acc, k, Ecto.Changeset.get_field(changeset, k))
+      end)
+
+    ProcessRrule.process_data(model)
+  end
+
+  defp text_inputs_to_arrays(params) do
     Enum.reduce(
       [
         "by_hour",
@@ -177,28 +183,28 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
     )
   end
 
-  def add_rrule(%Ecto.Changeset{} = changeset, rrule) do
+  defp add_rrule(%Ecto.Changeset{} = changeset, rrule) do
     changeset |> Map.put(:changes, Map.put(Map.get(changeset, :changes), :rrule, rrule))
   end
 
-  def deserialise_text_array(text) when is_nil(text), do: nil
+  defp deserialise_text_array(text) when is_nil(text), do: nil
 
-  def deserialise_text_array(text) do
+  defp deserialise_text_array(text) do
     text
     |> String.replace(" ", "")
     |> String.split(",")
   end
 
-  def string_to_date(date) do
+  defp string_to_date(date) do
     {:ok, dateParsed} = NaiveDateTime.from_iso8601(date)
     Calendar.strftime(dateParsed, "%a, %B %d %Y")
   end
 
-  def serialise_array(param) when param == nil do
+  defp serialise_array(param) when param == nil do
     param
   end
 
-  def serialise_array(param) do
+  defp serialise_array(param) do
     Enum.join(param, ", ")
   end
 end

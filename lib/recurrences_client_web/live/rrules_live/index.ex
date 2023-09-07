@@ -17,6 +17,7 @@ defmodule RecurrencesClientWeb.RrulesLive.Index do
   defp apply_action(socket, :edit, %{"id" => id}) do
     socket
     |> assign(:page_title, "Edit Rrules")
+    |> assign(:dates, [])
     |> assign(:rrules, Recurreces.get_rrules!(id))
   end
 
