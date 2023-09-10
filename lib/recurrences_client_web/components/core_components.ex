@@ -281,6 +281,7 @@ defmodule RecurrencesClientWeb.CoreComponents do
   attr(:prompt, :string, default: nil, doc: "the prompt for select inputs")
   attr(:options, :list, doc: "the options to pass to Phoenix.HTML.Form.options_for_select/2")
   attr(:multiple, :boolean, default: false, doc: "the multiple flag for select inputs")
+  attr(:tooltip, :string, default: nil)
 
   attr(:rest, :global,
     include: ~w(accept autocomplete capture cols disabled form list max maxlength min minlength
@@ -326,7 +327,7 @@ defmodule RecurrencesClientWeb.CoreComponents do
     ~H"""
     <div class="sm:col-span-3">
     <div id={@id} phx-feedback-for={@name} phx-update="ignore">
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id} tooltip={@tooltip}><%= @label %></.label>
       <select
         name={@name}
         class="mt-2 block w-full rounded-md border border-gray-300 bg-white shadow-sm focus:border-zinc-400 focus:ring-0 sm:text-sm"
@@ -367,7 +368,7 @@ defmodule RecurrencesClientWeb.CoreComponents do
   def input(assigns) do
     ~H"""
     <div phx-feedback-for={@name} class="sm:col-span-3">
-      <.label for={@id}><%= @label %></.label>
+      <.label for={@id} tooltip={@tooltip} id={@id}><%= @label %></.label>
       <input
         type={@type}
         name={@name}
@@ -390,12 +391,24 @@ defmodule RecurrencesClientWeb.CoreComponents do
   Renders a label.
   """
   attr(:for, :string, default: nil)
+  attr(:tooltip, :string, default: nil)
+  attr(:id, :any)
   slot(:inner_block, required: true)
 
   def label(assigns) do
     ~H"""
     <label for={@for} class="block text-sm font-semibold leading-6 text-zinc-800">
-      <%= render_slot(@inner_block) %>
+    <%= render_slot(@inner_block) %>
+    <%= if @tooltip do %>
+    <button data-tooltip-target={"tooltip-hover-#{@for}"} data-tooltip-trigger="hover" type="button" class="text-blue-700 hover:bg-blue-700 hover:text-white focus:outline-none focus:ring-blue-300 font-medium rounded-full text-sm text-center items-center dark:text-blue-500 dark:hover:text-white dark:focus:ring-blue-800 dark:hover:bg-blue-500">
+    <.icon name="hero-information-circle" class="h-8 w-8" />
+    <span class="sr-only">Icon description</span>
+    </button>
+    <div id={"tooltip-hover-#{@for}"} role="tooltip" class="absolute z-10 invisible inline-block px-3 py-2 text-sm font-medium text-white transition-opacity duration-300 bg-gray-900 rounded-lg shadow-sm opacity-0 tooltip dark:bg-gray-7 max-w-2xl">
+    <%= @tooltip %>
+    <div class="tooltip-arrow" data-popper-arrow></div>
+    </div>
+    <% end %>
     </label>
     """
   end
