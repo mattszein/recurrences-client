@@ -22,6 +22,7 @@ import { Socket } from "phoenix"
 import { LiveSocket } from "phoenix_live_view"
 import topbar from "../vendor/topbar"
 import TomSelect from '../vendor/tom-select/tom-select.min'
+import "../vendor/flowbite-1.8.1/flowbite.phoenix.min"
 import * as Hooks from "./hooks";
 
 window.TomSelect = TomSelect;
