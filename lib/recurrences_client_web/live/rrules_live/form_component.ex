@@ -32,13 +32,14 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
             label="Freq"
             prompt="Choose a value"
             options={Ecto.Enum.values(RecurrencesClient.Recurreces.Rrules, :freq)}
+            tooltip="The frequency of the recurrence. Must be one of YEARLY, MONTHLY, WEEKLY, DAILY, HOURLY, MINUTELY, or SECONDLY."
           />
-          <.input field={@form[:by_hour]} type="text" label="By Hour" value={input_value(@form, :by_hour) |> serialise_array} />
-          <.input field={@form[:by_minute]} type="text" label="By Minute"  value={input_value(@form, :by_minute) |> serialise_array}/> 
-          <.input field={@form[:by_month]} type="text" label="By Month" value={input_value(@form, :by_month) |> serialise_array}/>
-          <.input field={@form[:by_month_day]} type="text" label="By Month Day" value={input_value(@form, :by_month_day) |> serialise_array} />
-          <.input field={@form[:by_second]} type="text" label="By Second" value={input_value(@form, :by_second) |> serialise_array}/>
-          <.input field={@form[:by_set_pos]} type="text" label="By Set pos" value={input_value(@form, :by_set_pos) |> serialise_array} />
+          <.input field={@form[:by_hour]} type="text" label="By Hour" value={input_value(@form, :by_hour) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the hours to apply the recurrence to." />
+          <.input field={@form[:by_minute]} type="text" label="By Minute"  value={input_value(@form, :by_minute) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the minutes to apply the recurrence to."/> 
+          <.input field={@form[:by_month]} type="text" label="By Month" value={input_value(@form, :by_month) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the months to apply the recurrence to." />
+          <.input field={@form[:by_month_day]} type="text" label="By Month Day" value={input_value(@form, :by_month_day) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the month days to apply the recurrence to." />
+          <.input field={@form[:by_second]} type="text" label="By Second" value={input_value(@form, :by_second) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the seconds to apply the recurrence to."/>
+          <.input field={@form[:by_set_pos]} type="text" label="By Set pos" value={input_value(@form, :by_set_pos) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, positive or negative. Each given integer will specify an occurrence number, corresponding to the nth occurrence of the rule inside the frequency period. For example, a bysetpos of -1 if combined with a MONTHLY frequency, and a byweekday of (MO, TU, WE, TH, FR), will result in the last work day of every month."/>
 
          <.input
             field={@form[:by_week_day]}
@@ -46,14 +47,15 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
             multiple
             label="By week day"
             options={[{"MO", "MO"}, {"TU","TU"}, {"WE","WE"}, {"TH","TH"}, {"FR", "FR"}, {"SA","SA"}, {"SU","SU"}]}
+            tooltip="If given, it must be either an integer (0 == MO), a sequence of integers, one of the weekday constants (MO, TU, etc), or a sequence of these constants. When given, these variables will define the weekdays where the recurrence will be applied. It’s also possible to use an argument n for the weekday instances, which will mean the nth occurrence of this weekday in the period. For example, with MONTHLY, or with YEARLY and BYMONTH, using FR(+1) in byweekday will specify the first friday of the month where the recurrence happens. Notice that in the RFC documentation, this is specified as BYDAY, but was renamed to avoid the ambiguity of that keyword."
           />
-          <.input field={@form[:by_week_no]} type="text" label="By Week no" value={input_value(@form, :by_week_no) |> serialise_array}/>
-          <.input field={@form[:by_year_day]} type="text" label="By Year Day" value={input_value(@form, :by_year_day) |> serialise_array} />
-          <.input field={@form[:count]} type="number" label="Count" />
-          <.input field={@form[:dt_start]} type="datetime-local" label="Dt start" />
-          <.input field={@form[:interval]} type="number" label="Interval" />
-          <.input field={@form[:until]} type="datetime-local" label="Until" />
-          <.input field={@form[:week_start]} type="number" label="Week start" />
+          <.input field={@form[:by_week_no]} type="text" label="By Week no" value={input_value(@form, :by_week_no) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the week numbers to apply the recurrence to. Week numbers have the meaning described in ISO8601, that is, the first week of the year is that containing at least four days of the new year." />
+          <.input field={@form[:by_year_day]} type="text" label="By Year Day" value={input_value(@form, :by_year_day) |> serialise_array} tooltip="If given, it must be either an integer, or a sequence of integers, meaning the year days to apply the recurrence to."/>
+          <.input field={@form[:count]} type="number" label="Count" tooltip="If given, this determines how many occurrences will be generated. Cannot use in conjunction with until"/>
+          <.input field={@form[:dt_start]} type="datetime-local" label="Dt start" tooltip="The recurrence start. Besides being the base for the recurrence, missing parameters in the final recurrence instances will also be extracted from this date" />
+          <.input field={@form[:interval]} type="number" label="Interval" tooltip="The interval between each freq iteration. For example, when using YEARLY, an interval of 2 means once every two years, but with HOURLY, it means once every two hours. The default interval is 1."/>
+          <.input field={@form[:until]} type="datetime-local" label="Until" tooltip="If given, this must be a datetime instance specifying the upper-bound limit of the recurrence. The last recurrence in the rule is the greatest datetime that is less than or equal to the value specified in the until parameter."/>
+          <.input field={@form[:week_start]} type="number" label="Week start" tooltip="The week start day. Must be one of the MO, TU, WE constants, or an integer, specifying the first day of the week. This will affect recurrences based on weekly periods. "/>
 
           <:actions>
             <.button phx-disable-with="Saving...">Save Rrules</.button>
