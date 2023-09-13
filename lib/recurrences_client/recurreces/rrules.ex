@@ -26,7 +26,7 @@ defmodule RecurrencesClient.Recurreces.Rrules do
 
     field(:interval, :integer)
     field(:until, :naive_datetime)
-    field(:week_start, :integer)
+    field(:week_start, Ecto.Enum, values: [MO: 0, TU: 1, WE: 2, TH: 3, FR: 4, SA: 5, SU: 6])
 
     field(:name, :string)
     field(:rrule, :string)
@@ -62,6 +62,11 @@ defmodule RecurrencesClient.Recurreces.Rrules do
     |> validate_related_required(:until)
     |> validate_until_and_dstart()
     |> validate_weekday()
+    |> validate_subset(:by_month_day, -31..31)
+    |> validate_subset(:by_year_day, -366..366)
+    |> validate_subset(:by_week_no, -53..53)
+    |> validate_subset(:by_month, 1..12)
+    |> validate_subset(:by_set_pos, -366..366)
   end
 
   defp validate_until_and_dstart(changeset) do
@@ -89,24 +94,41 @@ defmodule RecurrencesClient.Recurreces.Rrules do
 
   defp validate_weekday(changeset) do
     weekdays = ["MO", "TU", "WE", "TH", "FR", "SA", "SU"]
-    values = Ecto.Changeset.get_change(changeset, :by_week_day)
+    days = Ecto.Changeset.get_field(changeset, :by_week_day)
+    freq = Ecto.Changeset.get_field(changeset, :freq)
+    weekno = Ecto.Changeset.get_field(changeset, :by_week_no)
 
-    if values == nil do
-      changeset
-    else
-      Enum.reduce(values, changeset, fn val, ch ->
-        if String.match?(val, ~r/(^[+|-])([0-9])*([A-Z]{2})$|(^[A-Z]{2})$/) do
-          wd = String.slice(val, -2, 2)
+    case days do
+      nil ->
+        changeset
 
-          if Enum.member?(weekdays, wd) do
-            ch
+      [_] when freq == :YEARLY and weekno != [] ->
+        add_error(
+          changeset,
+          :by_week_day,
+          "MUST NOT be specified with a numeric value with the FREQ rule part set to YEARLY when the BYWEEKNO rule part is specified."
+        )
+
+      values ->
+        Enum.reduce(values, changeset, fn val, ch ->
+          if String.match?(val, ~r/(^[+|-])([0-9])*([A-Z]{2})$|(^[A-Z]{2})$/) do
+            if String.length(val) > 2 && (freq != :YEARLY && freq != :MONTHLY) do
+              add_error(
+                ch,
+                :by_week_day,
+                "Value #{val} is invalid, MUST NOT be specified with a numeric value when the FREQ rule part is not set to MONTHLY or YEARLY."
+              )
+            else
+              if Enum.member?(weekdays, String.slice(val, -2, 2)) do
+                ch
+              else
+                add_error(ch, :by_week_day, "Bad Format. Day #{val} is invalid")
+              end
+            end
           else
             add_error(ch, :by_week_day, "Bad Format. Value #{val} is invalid")
           end
-        else
-          add_error(ch, :by_week_day, "Bad Format. Value #{val} is invalid")
-        end
-      end)
+        end)
     end
   end
 
@@ -129,18 +151,6 @@ defmodule RecurrencesClient.Recurreces.Rrules do
       :week_start,
       :rrule
     ]
-  end
-
-  def to_storeable_map(struct) do
-    association_fields = struct.__struct__.__schema__(:associations)
-    waste_fields = association_fields ++ @schema_meta_fields ++ [:name, :updated_at, :inserted_at]
-
-    struct
-    |> Map.from_struct()
-    |> Map.drop(waste_fields)
-    |> Map.update!(:dt_start, &date_to_string/1)
-    |> Map.update(:until, nil, &date_to_string/1)
-    |> Map.update!(:freq, &Atom.to_string(&1))
   end
 
   def date_to_string(date) when date == nil do
