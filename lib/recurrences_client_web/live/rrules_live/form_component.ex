@@ -55,7 +55,14 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
           <.input field={@form[:dt_start]} type="datetime-local" label="Dt start" tooltip="The recurrence start. Besides being the base for the recurrence, missing parameters in the final recurrence instances will also be extracted from this date" />
           <.input field={@form[:interval]} type="number" label="Interval" tooltip="The interval between each freq iteration. For example, when using YEARLY, an interval of 2 means once every two years, but with HOURLY, it means once every two hours. The default interval is 1."/>
           <.input field={@form[:until]} type="datetime-local" label="Until" tooltip="If given, this must be a datetime instance specifying the upper-bound limit of the recurrence. The last recurrence in the rule is the greatest datetime that is less than or equal to the value specified in the until parameter."/>
-          <.input field={@form[:week_start]} type="number" label="Week start" tooltip="The week start day. Must be one of the MO, TU, WE constants, or an integer, specifying the first day of the week. This will affect recurrences based on weekly periods. "/>
+          <.input
+            field={@form[:week_start]}
+            type="select"
+            label="Week Start"
+            prompt="Choose a value"
+            options={Ecto.Enum.values(RecurrencesClient.Recurreces.Rrules, :week_start)}
+            tooltip="The week start day. Must be one of the MO, TU, WE constants, specifying the first day of the week. This will affect recurrences based on weekly periods."
+          />
 
           <:actions>
             <.button phx-disable-with="Saving...">Save Rrules</.button>
