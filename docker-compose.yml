@@ -20,11 +20,8 @@ services:
     ports:
       - 4000:4000
   server:
-    build: 
-      context: ../recurrences_grpc/
-      dockerfile: Dockerfile
-    volumes:
-      - ../recurrences_grpc:/recurrences_grpc
+    image: 'mattszein/recurrences-grpc:0.1'
+    environment:
+      PORT: 4400
     ports:
       - 4400:4400
-    command: cargo run --bin recurrences-server

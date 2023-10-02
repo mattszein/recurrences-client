@@ -156,9 +156,10 @@ defmodule RecurrencesClientWeb.RrulesLive.FormComponent do
   defp process_rrule(socket, changeset) do
     if Enum.empty?(Map.get(changeset, :errors)) do
       data = get_dates(changeset)
+      dates = Enum.map(Map.get(data, :dates), fn x -> x.start end)
 
       socket
-      |> assign(:dates, Map.get(data, :dates))
+      |> assign(:dates, dates)
       |> assign_form(add_rrule(changeset, Map.get(data, :rrule)))
     else
       socket

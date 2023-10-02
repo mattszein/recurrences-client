@@ -18,16 +18,25 @@ defmodule Recurrencesclient.ProcessRrule do
       freq: nil,
       interval: 1,
       until: nil,
-      week_start: 0
+      week_start: 0,
+      timezone: nil
     }
   end
 
   def process_data(params) do
     parsed_data = parse_model(params)
-    IO.inspect(parsed_data)
     request = Map.merge(default_data_rrule(), parsed_data)
+
+    data_request = %Recurrencerule.DataRequest{
+      rrules: [request],
+      ex_rule: [],
+      ex_date: [],
+      rdates: [],
+      duration: "PT0H"
+    }
+
     con = ServicesConnections.get_connection()
-    {:ok, reply} = con |> Recurrencerule.RruleProcessing.Stub.data_rrule_to_dates(request)
+    {:ok, reply} = con |> Recurrencerule.RruleProcessing.Stub.data_rrule_to_dates(data_request)
     reply
   end
 
