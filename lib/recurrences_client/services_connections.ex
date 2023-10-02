@@ -13,13 +13,14 @@ defmodule RecurrencesClient.ServicesConnections do
   def get_connection do
     t = get_table()
     a = get_channel(t)
+    grpc_server = System.get_env("GRPC_SERVER_HOST") <> ":" <> System.get_env("GRPC_SERVER_PORT")
 
     case a do
       [{:channel, chan}] ->
         chan
 
       [] ->
-        {:ok, chan} = GRPC.Stub.connect("server:4400")
+        {:ok, chan} = GRPC.Stub.connect(grpc_server)
         :ets.insert(t, {:channel, chan})
         chan
     end
