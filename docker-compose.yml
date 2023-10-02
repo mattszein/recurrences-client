@@ -11,17 +11,24 @@ services:
     restart: always
     volumes:
       - ./database/:/var/lib/postgresql/data
+  grpc-server:
+    image: 'mattszein/recurrences-grpc:0.1'
+    environment:
+      PORT: 4400
+    ports:
+      - 4400:4400
   backend:
     build: 
       context: .
       dockerfile: Dockerfile
     volumes:
       - ./:/recurrences_client
+    environment:
+      GRPC_SERVER_HOST: grpc-server
+      GRPC_SERVER_PORT: 4400
     ports:
       - 4000:4000
-  server:
-    image: 'mattszein/recurrences-grpc:0.1'
-    environment:
-      PORT: 4400
-    ports:
-      - 4400:4400
+    depends_on:
+      - db
+      - grpc-server
+
